@@ -36,6 +36,35 @@ app.post('/tasks', async (req, res) => {
     }
 });
 
+
+// Actualizar una tarea (marcar como completada o cambiar título)
+app.put('/tasks/:id', async (req, res) => {
+    try {
+        const updatedTask = await Task.findByIdAndUpdate(
+            req.params.id, 
+            req.body, 
+            { new: true } // Esto devuelve la tarea ya actualizada, no la vieja
+        );
+        if (!updatedTask) return res.status(404).json({ message: 'Tarea no encontrada' });
+        res.json(updatedTask);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+
+// Eliminar una tarea de la base de datos
+app.delete('/tasks/:id', async (req, res) => {
+    try {
+        const deletedTask = await Task.findByIdAndDelete(req.params.id);
+        if (!deletedTask) return res.status(404).json({ message: 'Tarea no encontrada' });
+        res.json({ message: 'Tarea eliminada correctamente' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}}`));
