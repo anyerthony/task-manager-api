@@ -1,45 +1,41 @@
-const express = require('express'); // Importamos la librería
-const app = express(); // Inicializamos express
-const PORT = 3000; // El puerto donde vivirá el servidor
+require('dotenv').config(); // Carga las variables del .env
+const express = require('express');
+const mongoose = require('mongoose');
+const Task = require('./models/Tasks'); // Importamos el modelo
 
-// Nuestra primera "Ruta"
-app.get('/', (req, res) => {
-    res.send('¡Servidor funcionando! voy recordando mas o menos.');
+const app = express();
+app.use(express.json());
+
+// REEMPLAZA ESTA URL con la que copiaste de Atlas (pon tu password real)
+const mongoURI = process.env.MONGO_URI;
+
+mongoose.connect(mongoURI)
+    .then(() => console.log('Conectado a MongoDB...'))
+    .catch(err => console.error('Error de conexión:', err));
+
+app.get('/tasks', async (req, res) => {
+    try {
+        const tasks = await Task.find();
+        res.json(tasks);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 });
 
-app.use(express.json()); // Esto permite que tu servidor lea el cuerpo (body) de las peticiones POST
+// Guardar tarea en la DB
+app.post('/tasks', async (req, res) => {
+    const task = new Task({
+        title: req.body.title
+    });
 
-let tasks = [
-    { id: 1, title: 'Aprender Node.js', completed: false },
-    { id: 2, title: 'Configurar Nodemon', completed: true }
-];
-
-// 1. Obtener todas las tareas (READ)
-app.get('/tasks', (req, res) => {
-    res.json(tasks);
+    try {
+        const newTask = await task.save();
+        res.status(201).json(newTask);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
 });
 
-// 2. Crear una nueva tarea (CREATE)
-app.post('/tasks', (req, res) => {
-    const newTask = {
-        id: tasks.length + 1,
-        title: req.body.title,
-        completed: false
-    };
-    tasks.push(newTask);
-    res.status(201).json(newTask);
-});
+const PORT = process.env.PORT || 3000;
 
-// 3. Eliminar una tarea (DELETE)
-app.delete('/tasks/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    tasks = tasks.filter(t => t.id !== id);
-    res.status(204).send();
-});
-
-
-
-// Encendemos el servidor
-app.listen(PORT, () => {
-    console.log(`Servidor corriendo en http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}}`));
