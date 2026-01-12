@@ -33,7 +33,7 @@ router.post('/login', async (req, res) => {
         if (!isMatch) return res.status(400).json({ message: "Contraseña incorrecta" });
 
         // Crear el Token (el "ticket" de acceso)
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '30s' });
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
         
         res.json({ token, user: { id: user._id, username: user.username } });
     } catch (error) {

@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const Task = require('../models/Tasks'); // Fíjate en los dos puntos (..) para subir de nivel
+const auth = require('../middleware/auth'); // Importar el portero
 
 // Obtener todas las tareas
-router.get('/', async (req, res) => {
+router.get('/' ,auth , async (req, res) => {
     try {
-        const tasks = await Task.find();
+        const tasks = await Task.find({ user: req.user.id });
         res.json(tasks);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -13,8 +14,11 @@ router.get('/', async (req, res) => {
 });
 
 // Crear una tarea
-router.post('/', async (req, res) => {
-    const task = new Task({ title: req.body.title });
+router.post('/',auth , async (req, res) => {
+    const task = new Task({
+        title: req.body.title,
+        user: req.user.id // El ID que el portero sacó del Token
+    });
     try {
         const newTask = await task.save();
         res.status(201).json(newTask);
